@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ToolSnap Admin</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%236366f1'/><text x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial Black,sans-serif' font-weight='900' font-size='26' fill='white'>TS</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#03030a;--bg2:#07070f;--sf:#0c0c1a;--sf2:#121228;--sf3:#1a1a36;
+  --bd:#1c1c34;--bd2:#252545;--ac:#6366f1;--ach:#4f46e5;--ag:rgba(99,102,241,.25);
+  --cy:#06b6d4;--tx:#f0f0fa;--t2:#c0c0dc;--mu:#6868a0;
+  --ok:#22c55e;--er:#f43f5e;--wn:#f59e0b;
+  --fd:'Syne',sans-serif;--fb:'Outfit',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--tx);font-family:var(--fb);min-height:100vh}
+a{color:inherit;text-decoration:none}
+button{font-family:var(--fb);cursor:pointer;border:none}
+
+/* ── LOGIN ── */
+#login-page{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  padding:2rem;position:relative;overflow:hidden;
+}
+#login-page::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 60% 50% at 30% 30%,rgba(99,102,241,.12),transparent 65%),
+             radial-gradient(ellipse 40% 40% at 80% 80%,rgba(6,182,212,.08),transparent 65%);
+}
+.login-box{
+  background:var(--sf);border:1px solid var(--bd2);border-radius:18px;
+  padding:2.5rem;width:100%;max-width:400px;position:relative;z-index:1;
+}
+.login-logo{font-family:var(--fd);font-size:1.6rem;font-weight:800;text-align:center;margin-bottom:.4rem}
+.login-logo em{font-style:normal;background:linear-gradient(135deg,var(--ac),var(--cy));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.login-sub{text-align:center;color:var(--mu);font-size:.85rem;margin-bottom:2rem}
+.lg{margin-bottom:1rem}
+.lg label{display:block;font-size:.78rem;color:var(--mu);margin-bottom:.4rem;font-weight:500}
+.li{
+  width:100%;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;
+  color:var(--tx);font-size:.92rem;padding:12px 14px;outline:none;
+  transition:border-color .2s;font-family:var(--fb);
+}
+.li:focus{border-color:var(--ac)}
+.li.bad{border-color:var(--er)}
+.login-err{color:var(--er);font-size:.78rem;margin-top:.5rem;display:none;text-align:center}
+.login-err.show{display:block}
+.btn-login{
+  width:100%;padding:12px;border-radius:8px;background:var(--ac);color:#fff;
+  font-size:.95rem;font-weight:600;margin-top:1.5rem;transition:all .2s;
+}
+.btn-login:hover{background:var(--ach);box-shadow:0 0 24px var(--ag)}
+.login-hint{text-align:center;color:var(--mu);font-size:.75rem;margin-top:1rem}
+
+/* ── ADMIN LAYOUT ── */
+#admin-page{display:none;min-height:100vh}
+.admin-wrap{display:flex;min-height:100vh}
+
+/* Sidebar */
+.sidebar{
+  width:240px;flex-shrink:0;background:var(--sf);border-right:1px solid var(--bd);
+  display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;
+}
+.sb-logo{padding:1.5rem;border-bottom:1px solid var(--bd)}
+.sb-logo .logo{font-family:var(--fd);font-size:1.3rem;font-weight:800}
+.sb-logo .logo em{font-style:normal;background:linear-gradient(135deg,var(--ac),var(--cy));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.sb-logo p{font-size:.72rem;color:var(--mu);margin-top:2px}
+.sb-nav{flex:1;padding:1rem 0;overflow-y:auto}
+.sb-item{
+  display:flex;align-items:center;gap:.75rem;
+  padding:.75rem 1.25rem;color:var(--mu);font-size:.88rem;font-weight:500;
+  transition:all .2s;cursor:pointer;border-left:2px solid transparent;
+}
+.sb-item:hover{color:var(--tx);background:var(--sf2)}
+.sb-item.on{color:var(--ac);background:rgba(99,102,241,.08);border-left-color:var(--ac)}
+.sb-item .icon{font-size:1rem;width:20px;text-align:center}
+.sb-bottom{padding:1rem;border-top:1px solid var(--bd)}
+.sb-user{display:flex;align-items:center;gap:.75rem;padding:.75rem;border-radius:8px;background:var(--sf2)}
+.sb-avatar{width:34px;height:34px;border-radius:50%;background:var(--ac);display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:.8rem;font-weight:700;color:#fff;flex-shrink:0}
+.sb-uname{font-size:.82rem;font-weight:600}
+.sb-role{font-size:.7rem;color:var(--mu)}
+.sb-logout{
+  display:flex;align-items:center;gap:6px;margin-top:.75rem;
+  padding:.6rem 1rem;border-radius:8px;background:transparent;
+  border:1px solid var(--bd);color:var(--mu);font-size:.8rem;
+  width:100%;justify-content:center;transition:all .2s;
+}
+.sb-logout:hover{border-color:var(--er);color:var(--er)}
+
+/* Main content */
+.admin-main{flex:1;margin-left:240px;padding:2rem}
+.admin-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem}
+.admin-header h1{font-family:var(--fd);font-size:1.6rem;font-weight:800}
+.admin-header p{color:var(--mu);font-size:.85rem;margin-top:2px}
+.hbadge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:100px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);color:var(--ok);font-size:.75rem}
+.hbadge::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--ok);animation:pl 2s infinite}
+@keyframes pl{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* Panels */
+.panel{display:none}
+.panel.on{display:block}
+
+/* Cards grid */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1.25rem;margin-bottom:2rem}
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:14px;padding:1.5rem}
+.card-icon{font-size:1.8rem;margin-bottom:.75rem}
+.card-val{font-family:var(--fd);font-size:2rem;font-weight:800;margin-bottom:.25rem}
+.card-lbl{font-size:.8rem;color:var(--mu)}
+.card.ac .card-val{color:var(--ac)}
+.card.ok .card-val{color:var(--ok)}
+.card.cy .card-val{color:var(--cy)}
+.card.wn .card-val{color:var(--wn)}
+
+/* Table */
+.table-wrap{background:var(--sf);border:1px solid var(--bd);border-radius:14px;overflow:hidden;margin-bottom:2rem}
+.table-head{display:flex;align-items:center;justify-content:space-between;padding:1.25rem 1.5rem;border-bottom:1px solid var(--bd)}
+.table-head h3{font-family:var(--fd);font-size:1rem;font-weight:700}
+table{width:100%;border-collapse:collapse}
+thead th{padding:.75rem 1.5rem;text-align:left;font-size:.75rem;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--bd);background:var(--sf2)}
+tbody tr{border-bottom:1px solid var(--bd);transition:background .15s}
+tbody tr:last-child{border:none}
+tbody tr:hover{background:var(--sf2)}
+tbody td{padding:.85rem 1.5rem;font-size:.85rem;vertical-align:middle}
+.badge{display:inline-block;padding:3px 10px;border-radius:100px;font-size:.72rem;font-weight:600}
+.badge-ok{background:rgba(34,197,94,.12);color:var(--ok)}
+.badge-wn{background:rgba(245,158,11,.12);color:var(--wn)}
+.badge-er{background:rgba(244,63,94,.12);color:var(--er)}
+.badge-ac{background:rgba(99,102,241,.12);color:var(--ac)}
+
+/* Toggle switch */
+.toggle{position:relative;display:inline-block;width:40px;height:22px}
+.toggle input{opacity:0;width:0;height:0}
+.tslider{position:absolute;cursor:pointer;inset:0;background:var(--bd2);border-radius:22px;transition:.2s}
+.tslider::before{content:'';position:absolute;width:16px;height:16px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s}
+input:checked+.tslider{background:var(--ac)}
+input:checked+.tslider::before{transform:translateX(18px)}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:.82rem;font-weight:600;cursor:pointer;transition:all .2s;font-family:var(--fb);border:none}
+.btn-p{background:var(--ac);color:#fff}
+.btn-p:hover{background:var(--ach)}
+.btn-t{background:var(--sf2);color:var(--tx);border:1px solid var(--bd)}
+.btn-t:hover{border-color:var(--ac);color:var(--ac)}
+.btn-er{background:rgba(244,63,94,.1);color:var(--er);border:1px solid rgba(244,63,94,.3)}
+.btn-er:hover{background:rgba(244,63,94,.2)}
+
+/* Messages */
+.msg-card{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:1.25rem;margin-bottom:1rem}
+.msg-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem}
+.msg-from{font-weight:600;font-size:.9rem}
+.msg-date{font-size:.75rem;color:var(--mu)}
+.msg-subject{font-size:.78rem;color:var(--ac);margin-bottom:.5rem}
+.msg-body{font-size:.85rem;color:var(--t2);line-height:1.65}
+.msg-actions{display:flex;gap:.5rem;margin-top:.75rem}
+.msg-empty{text-align:center;padding:3rem;color:var(--mu);font-size:.9rem}
+
+/* Settings */
+.settings-section{background:var(--sf);border:1px solid var(--bd);border-radius:14px;padding:1.5rem;margin-bottom:1.5rem}
+.settings-section h3{font-family:var(--fd);font-size:1rem;font-weight:700;margin-bottom:1.25rem;padding-bottom:.75rem;border-bottom:1px solid var(--bd)}
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:.85rem 0;border-bottom:1px solid var(--bd)}
+.setting-row:last-child{border:none;padding-bottom:0}
+.setting-info h4{font-size:.88rem;font-weight:500}
+.setting-info p{font-size:.75rem;color:var(--mu);margin-top:2px}
+.si{width:100%;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;color:var(--tx);font-size:.88rem;padding:10px 14px;outline:none;transition:border-color .2s;font-family:var(--fb);margin-top:.5rem}
+.si:focus{border-color:var(--ac)}
+
+/* Chart */
+.chart-wrap{background:var(--sf);border:1px solid var(--bd);border-radius:14px;padding:1.5rem;margin-bottom:2rem}
+.chart-title{font-family:var(--fd);font-size:.95rem;font-weight:700;margin-bottom:1.25rem}
+.chart-bars{display:flex;align-items:flex-end;gap:.5rem;height:120px}
+.cbar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:.4rem}
+.cbar{width:100%;border-radius:4px 4px 0 0;background:var(--ac);opacity:.7;transition:opacity .2s;min-height:4px}
+.cbar:hover{opacity:1}
+.cbar-lbl{font-size:.65rem;color:var(--mu)}
+
+/* Toast */
+#atolast{position:fixed;bottom:2rem;right:2rem;background:var(--sf3);border:1px solid var(--bd2);color:var(--tx);padding:10px 20px;border-radius:8px;font-size:.85rem;z-index:9999;display:none;animation:fdi .3s ease}
+@keyframes fdi{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* Responsive */
+@media(max-width:768px){
+  .sidebar{width:200px}
+  .admin-main{margin-left:200px;padding:1.25rem}
+  .cards-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:600px){
+  .sidebar{display:none}
+  .admin-main{margin-left:0}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ LOGIN ═══════════════════════════════════ -->
+<div id="login-page">
+  <div class="login-box">
+    <div class="login-logo">Tool<em>Snap</em></div>
+    <p class="login-sub">Admin Panel — Restricted Access</p>
+    <div class="lg">
+      <label>Username</label>
+      <input type="text" id="lu" class="li" placeholder="admin" autocomplete="username">
+    </div>
+    <div class="lg">
+      <label>Password</label>
+      <input type="password" id="lp" class="li" placeholder="••••••••" autocomplete="current-password"
+             onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="login-err" id="lerr">❌ Wrong username or password</div>
+    <button class="btn-login" onclick="doLogin()">Sign In →</button>
+    <p class="login-hint">🔒 This page is for administrators only</p>
+  </div>
+</div>
+
+<!-- ═══ ADMIN ════════════════════════════════════ -->
+<div id="admin-page">
+  <div class="admin-wrap">
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sb-logo">
+        <div class="logo">Tool<em>Snap</em></div>
+        <p>Admin Panel</p>
+      </div>
+      <div class="sb-nav">
+        <div class="sb-item on" onclick="showPanel('dashboard',this)"><span class="icon">📊</span> Dashboard</div>
+        <div class="sb-item" onclick="showPanel('tools',this)"><span class="icon">🔧</span> Manage Tools</div>
+        <div class="sb-item" onclick="showPanel('messages',this)"><span class="icon">📬</span> Messages <span id="msg-badge" style="margin-left:auto;background:var(--er);color:#fff;font-size:.65rem;padding:2px 7px;border-radius:100px;display:none"></span></div>
+        <div class="sb-item" onclick="showPanel('settings',this)"><span class="icon">⚙️</span> Settings</div>
+      </div>
+      <div class="sb-bottom">
+        <div class="sb-user">
+          <div class="sb-avatar">A</div>
+          <div><div class="sb-uname">Admin</div><div class="sb-role">Super Admin</div></div>
+        </div>
+        <button class="sb-logout" onclick="doLogout()">🚪 Sign Out</button>
+      </div>
+    </div>
+
+    <!-- Main -->
+    <div class="admin-main">
+      <div class="admin-header">
+        <div>
+          <h1 id="panel-title">Dashboard</h1>
+          <p id="panel-sub">Welcome back, Admin</p>
+        </div>
+        <div class="hbadge">● Live</div>
+      </div>
+
+      <!-- DASHBOARD -->
+      <div class="panel on" id="p-dashboard">
+        <div class="cards-grid">
+          <div class="card ac"><div class="card-icon">🔧</div><div class="card-val" id="s-tools">12</div><div class="card-lbl">Total Tools</div></div>
+          <div class="card ok"><div class="card-icon">✅</div><div class="card-val" id="s-active">12</div><div class="card-lbl">Active Tools</div></div>
+          <div class="card cy"><div class="card-icon">📬</div><div class="card-val" id="s-msgs">0</div><div class="card-lbl">Messages</div></div>
+          <div class="card wn"><div class="card-icon">👁️</div><div class="card-val">—</div><div class="card-lbl">Visitors Today</div></div>
+        </div>
+
+        <div class="chart-wrap">
+          <div class="chart-title">📈 Tool Popularity (demo)</div>
+          <div class="chart-bars" id="chart-bars"></div>
+        </div>
+
+        <div class="table-wrap">
+          <div class="table-head"><h3>🔧 Tools Overview</h3></div>
+          <table>
+            <thead><tr><th>Tool</th><th>Category</th><th>Status</th></tr></thead>
+            <tbody id="dash-tool-list"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TOOLS -->
+      <div class="panel" id="p-tools">
+        <div class="table-wrap">
+          <div class="table-head">
+            <h3>🔧 All Tools</h3>
+            <span style="font-size:.8rem;color:var(--mu)">Toggle to enable/disable</span>
+          </div>
+          <table>
+            <thead><tr><th>Icon</th><th>Tool Name</th><th>Category</th><th>Status</th></tr></thead>
+            <tbody id="tools-list"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- MESSAGES -->
+      <div class="panel" id="p-messages">
+        <div id="msgs-list"></div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div class="panel" id="p-settings">
+        <div class="settings-section">
+          <h3>🌐 Site Settings</h3>
+          <div class="setting-row">
+            <div class="setting-info"><h4>Site Name</h4><p>Displayed in browser tab and header</p>
+              <input type="text" class="si" id="set-name" value="ToolSnap" oninput="saveSetting('name',this.value)">
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info"><h4>Contact Email</h4><p>Shown in contact section</p>
+              <input type="email" class="si" id="set-email" value="ahadjondavronov2@gmail.com" oninput="saveSetting('email',this.value)">
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info"><h4>Site URL</h4><p>Your Vercel domain</p>
+              <input type="text" class="si" id="set-url" value="toolsnap-psi.vercel.app" oninput="saveSetting('url',this.value)">
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <h3>🔐 Security</h3>
+          <div class="setting-row">
+            <div class="setting-info"><h4>Change Password</h4><p>Update your admin password</p>
+              <input type="password" class="si" id="set-pwd" placeholder="New password">
+              <button class="btn btn-p" style="margin-top:.5rem" onclick="changePwd()">Update Password</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <h3>🗑️ Data</h3>
+          <div class="setting-row">
+            <div class="setting-info"><h4>Clear All Messages</h4><p>Delete all contact form submissions</p></div>
+            <button class="btn btn-er" onclick="clearMsgs()">Clear Messages</button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /.admin-main -->
+  </div>
+</div>
+
+<div id="atolast"></div>
+
+<script>
+/* ─── CONFIG ────────────────────────────── */
+const ADMIN = { user:'admin', pass:'Davronov08A' };
+
+const TOOLS_DATA = [
+  {id:'image-compressor', icon:'🖼️', name:'Image Compressor',      tag:'image'},
+  {id:'image-resizer',    icon:'📐', name:'Image Resizer',          tag:'image'},
+  {id:'qr-generator',     icon:'🔲', name:'QR Code Generator',      tag:'generator'},
+  {id:'word-counter',     icon:'📝', name:'Word Counter',           tag:'text'},
+  {id:'password-gen',     icon:'🔐', name:'Password Generator',     tag:'generator'},
+  {id:'color-converter',  icon:'🎨', name:'Color Converter',        tag:'developer'},
+  {id:'lorem-ipsum',      icon:'📄', name:'Lorem Ipsum Generator',  tag:'text'},
+  {id:'text-case',        icon:'🔠', name:'Text Case Converter',    tag:'text'},
+  {id:'base64',           icon:'🔑', name:'Base64 Encoder/Decoder', tag:'developer'},
+  {id:'url-encoder',      icon:'🔗', name:'URL Encoder/Decoder',    tag:'developer'},
+  {id:'json-formatter',   icon:'📋', name:'JSON Formatter',         tag:'developer'},
+  {id:'markdown-preview', icon:'✍️', name:'Markdown Preview',       tag:'text'},
+];
+
+/* ─── STORAGE ───────────────────────────── */
+function getStore(key, def) {
+  try { return JSON.parse(localStorage.getItem('ts_'+key)) ?? def; } catch { return def; }
+}
+function setStore(key, val) { localStorage.setItem('ts_'+key, JSON.stringify(val)); }
+
+/* ─── TOAST ─────────────────────────────── */
+function toast(msg) {
+  const t = document.getElementById('atolast');
+  t.textContent = msg; t.style.display = 'block';
+  clearTimeout(t._t); t._t = setTimeout(() => t.style.display = 'none', 2500);
+}
+
+/* ─── LOGIN ─────────────────────────────── */
+function doLogin() {
+  const u = document.getElementById('lu').value.trim();
+  const p = document.getElementById('lp').value;
+  const pwd = getStore('pwd', ADMIN.pass);
+  if (u === ADMIN.user && p === pwd) {
+    setStore('auth', true);
+    document.getElementById('login-page').style.display = 'none';
+    document.getElementById('admin-page').style.display = 'block';
+    initAdmin();
+  } else {
+    document.getElementById('lerr').classList.add('show');
+    document.getElementById('lp').classList.add('bad');
+    setTimeout(() => {
+      document.getElementById('lerr').classList.remove('show');
+      document.getElementById('lp').classList.remove('bad');
+    }, 2500);
+  }
+}
+function doLogout() {
+  setStore('auth', false);
+  document.getElementById('admin-page').style.display = 'none';
+  document.getElementById('login-page').style.display = 'flex';
+  document.getElementById('lu').value = '';
+  document.getElementById('lp').value = '';
+}
+
+// Auto-login if session active
+if (getStore('auth', false)) {
+  document.getElementById('login-page').style.display = 'none';
+  document.getElementById('admin-page').style.display = 'block';
+  setTimeout(initAdmin, 0);
+}
+
+/* ─── PANELS ─────────────────────────────── */
+function showPanel(id, el) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('on'));
+  document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('on'));
+  document.getElementById('p-'+id).classList.add('on');
+  el.classList.add('on');
+  const titles = { dashboard:'Dashboard', tools:'Manage Tools', messages:'Messages', settings:'Settings' };
+  const subs   = { dashboard:'Overview of your ToolSnap site', tools:'Enable or disable tools', messages:'Contact form submissions', settings:'Site configuration' };
+  document.getElementById('panel-title').textContent = titles[id];
+  document.getElementById('panel-sub').textContent   = subs[id];
+  if (id === 'messages') renderMsgs();
+}
+
+/* ─── INIT ──────────────────────────────── */
+function initAdmin() {
+  renderToolsList();
+  renderDashTools();
+  renderChart();
+  updateMsgBadge();
+  loadSettings();
+}
+
+/* ─── TOOLS LIST ────────────────────────── */
+function getToolStatus() { return getStore('toolStatus', {}); }
+
+function renderToolsList() {
+  const status = getToolStatus();
+  document.getElementById('tools-list').innerHTML = TOOLS_DATA.map(t => {
+    const on = status[t.id] !== false;
+    return `<tr>
+      <td style="font-size:1.4rem">${t.icon}</td>
+      <td style="font-weight:500">${t.name}</td>
+      <td><span class="badge badge-ac">${t.tag}</span></td>
+      <td>
+        <label class="toggle">
+          <input type="checkbox" ${on?'checked':''} onchange="toggleTool('${t.id}',this.checked)">
+          <span class="tslider"></span>
+        </label>
+      </td>
+    </tr>`;
+  }).join('');
+  updateStats();
+}
+
+function toggleTool(id, val) {
+  const s = getToolStatus();
+  s[id] = val;
+  setStore('toolStatus', s);
+  updateStats();
+  toast(val ? '✅ Tool enabled' : '⛔ Tool disabled');
+}
+
+function updateStats() {
+  const s = getToolStatus();
+  const active = TOOLS_DATA.filter(t => s[t.id] !== false).length;
+  document.getElementById('s-tools').textContent  = TOOLS_DATA.length;
+  document.getElementById('s-active').textContent = active;
+}
+
+function renderDashTools() {
+  const status = getToolStatus();
+  document.getElementById('dash-tool-list').innerHTML = TOOLS_DATA.map(t => {
+    const on = status[t.id] !== false;
+    return `<tr>
+      <td>${t.icon} ${t.name}</td>
+      <td><span class="badge badge-ac">${t.tag}</span></td>
+      <td><span class="badge ${on?'badge-ok':'badge-er'}">${on?'Active':'Disabled'}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+/* ─── CHART ─────────────────────────────── */
+function renderChart() {
+  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const vals = [35,52,28,67,80,45,60];
+  const max = Math.max(...vals);
+  document.getElementById('chart-bars').innerHTML = days.map((d,i) => `
+    <div class="cbar-wrap">
+      <div class="cbar" style="height:${(vals[i]/max*100)}%" title="${vals[i]} uses"></div>
+      <div class="cbar-lbl">${d}</div>
+    </div>`).join('');
+}
+
+/* ─── MESSAGES ──────────────────────────── */
+function getMsgs() { return getStore('messages', []); }
+
+// Listen for messages from main site
+window.addEventListener('storage', e => {
+  if (e.key === 'ts_messages') { updateMsgBadge(); }
+});
+
+function updateMsgBadge() {
+  const msgs = getMsgs();
+  const unread = msgs.filter(m => !m.read).length;
+  const badge = document.getElementById('msg-badge');
+  document.getElementById('s-msgs').textContent = msgs.length;
+  if (unread > 0) { badge.textContent = unread; badge.style.display = 'inline'; }
+  else badge.style.display = 'none';
+}
+
+function renderMsgs() {
+  const msgs = getMsgs();
+  const el = document.getElementById('msgs-list');
+  if (!msgs.length) {
+    el.innerHTML = '<div class="msg-empty">📭 No messages yet.<br><span style="font-size:.8rem">Messages from your contact form will appear here.</span></div>';
+    return;
+  }
+  // Mark all as read
+  msgs.forEach(m => m.read = true);
+  setStore('messages', msgs);
+  updateMsgBadge();
+  el.innerHTML = msgs.slice().reverse().map((m,i) => `
+    <div class="msg-card">
+      <div class="msg-header">
+        <div>
+          <div class="msg-from">${m.name} &lt;${m.email}&gt;</div>
+          <div class="msg-date">${m.date}</div>
+        </div>
+        <span class="badge badge-ac">${m.subject||'General'}</span>
+      </div>
+      <div class="msg-body">${m.message}</div>
+      <div class="msg-actions">
+        <button class="btn btn-er btn-sm" onclick="deleteMsg(${msgs.length-1-i})">🗑 Delete</button>
+      </div>
+    </div>`).join('');
+}
+
+function deleteMsg(i) {
+  const msgs = getMsgs();
+  msgs.splice(i, 1);
+  setStore('messages', msgs);
+  renderMsgs();
+  updateMsgBadge();
+  toast('🗑 Message deleted');
+}
+
+function clearMsgs() {
+  if (!confirm('Delete all messages?')) return;
+  setStore('messages', []);
+  renderMsgs();
+  updateMsgBadge();
+  toast('🗑 All messages cleared');
+}
+
+/* ─── SETTINGS ──────────────────────────── */
+function loadSettings() {
+  const s = getStore('settings', {});
+  if (s.name)  document.getElementById('set-name').value  = s.name;
+  if (s.email) document.getElementById('set-email').value = s.email;
+  if (s.url)   document.getElementById('set-url').value   = s.url;
+}
+function saveSetting(key, val) {
+  const s = getStore('settings', {});
+  s[key] = val;
+  setStore('settings', s);
+  toast('✅ Saved');
+}
+function changePwd() {
+  const p = document.getElementById('set-pwd').value;
+  if (!p || p.length < 6) { toast('⚠️ Min 6 characters'); return; }
+  setStore('pwd', p);
+  document.getElementById('set-pwd').value = '';
+  toast('✅ Password updated');
+}
+</script>
+</body>
+</html>
